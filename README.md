@@ -126,8 +126,8 @@
 |  |  |  └── types.ts
 |  |  ├── context
 |  |  |  ├── ApolloConsumer.tsx
-|  |  |  ├── ApolloContext.ts
-|  |  |  ├── ApolloProvider.tsx
+|  |  |  ├── ApolloContext.ts - getApolloContext()方法，给子组件获取client上下文
+|  |  |  ├── ApolloProvider.tsx - consumer的实现，给子组件传上下文，将client传递
 |  |  |  └── index.ts
 |  |  ├── data
 |  |  |  ├── MutationData.ts
@@ -238,6 +238,65 @@ ignored
 ## 内部模块依赖
 
 ![img](./inner.svg)
+
+
+## 知识点
+
+### provider和context
+
+初始化后，通过ApolloProvider传递上下文：
+
+``` js
+// Initialize ApolloClient
+const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
+  cache,
+  uri: "http://localhost:4000/graphql",
+  headers: {
+    authorization: localStorage.getItem('token') || '',
+  },
+  typeDefs
+});
+
+injectStyles();
+
+// Pass the ApolloClient instance to the ApolloProvider component
+ReactDOM.render(
+  //将client注入，子组件通过useApolloClient来拿上下文
+    <ApolloProvider client={client}>
+      <IsLoggedIn />
+    </ApolloProvider>,
+    document.getElementById('root')
+  );
+
+```
+然后各个子组件通过useApolloClient来取到上下文：
+
+``` js
+
+const LogoutButton = () => {
+  // 从provider拿上下文
+  const client = useApolloClient();
+  return (
+    <StyledButton
+      data-testid="logout-button"
+
+      onClick={() => {
+        // Evict and garbage-collect the cached user object
+        client.cache.evict({ fieldName: 'me' });
+        client.cache.gc();
+        // Remove user details from localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        // Set the logged-in status to false
+        isLoggedInVar(false);
+      }}
+    >
+      <ExitIcon />
+      Logout
+    </StyledButton>
+  );
+}
+```
 
 
 

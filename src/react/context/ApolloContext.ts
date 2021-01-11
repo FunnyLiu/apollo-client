@@ -13,7 +13,7 @@ export interface ApolloContextValue {
 // context), a single Apollo context is created and tracked in global state.
 // We use React.createContext as the key instead of just React to avoid
 // ambiguities between default and namespace React imports.
-
+// 使用weakmap或者map来做缓存
 const cache = new (canUseWeakMap ? WeakMap : Map)<
   typeof React.createContext,
   React.Context<ApolloContextValue>
