@@ -33,6 +33,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
   //fetcher is set here rather than the destructuring to ensure fetch is
   //declared before referencing it. Reference in the destructuring would cause
   //a ReferenceError
+  // 默认使用window.fetch来完成接口的调用
   if (!fetcher) {
     fetcher = fetch;
   }
@@ -143,6 +144,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     }
 
     return new Observable(observer => {
+      // 使用fetch API来完成调用
       fetcher!(chosenURI, options)
         .then(response => {
           operation.setContext({ response });

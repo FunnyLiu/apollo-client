@@ -89,7 +89,7 @@
 |  |  ├── http
 |  |  |  ├── HttpLink.ts
 |  |  |  ├── checkFetcher.ts
-|  |  |  ├── createHttpLink.ts
+|  |  |  ├── createHttpLink.ts - 基于fetch api来完成接口发送的封装
 |  |  |  ├── createSignalIfSupported.ts
 |  |  |  ├── index.ts
 |  |  |  ├── parseAndCheckHttpResponse.ts
@@ -149,7 +149,7 @@
 |  |  |  ├── useApolloClient.ts
 |  |  |  ├── useLazyQuery.ts
 |  |  |  ├── useMutation.ts
-|  |  |  ├── useQuery.ts
+|  |  |  ├── useQuery.ts - useQuery的实现，基于useBaseQuery.ts
 |  |  |  ├── useReactiveVar.ts
 |  |  |  ├── useSubscription.ts
 |  |  |  └── utils
@@ -325,12 +325,108 @@ const IS_LOGGED_IN = gql`
 
 ### gql函数
 
+凭借graph风格的dsl用，比如以下这种
+
+``` js
+export const typeDefs = gql`
+  extend type Query {
+    isLoggedIn: Boolean!
+    cartItems: [ID!]!
+  }
+`;
+//@client告诉不要从服务端，而是从客户端拿数据
+//在这个项目里也就是cache的值
+const IS_LOGGED_IN = gql`
+  query IsUserLoggedIn {
+    isLoggedIn @client
+  }
+`;
+
+```
+
 从graphql-tag[源码分析](https://github.com/FunnyLiu/graphql-tag/tree/readsource)，这个包，导出gql函数。
 
 最后其中是通过[graphql-js的parser来完成解析](https://github.com/FunnyLiu/graphql-js/blob/readsource/src/language/parser.js#L116)
 
 
 具体逻辑在[此处](https://github.com/FunnyLiu/apollo-client/blob/readsource/src/core/index.ts#L113)
+
+
+
+### useQuery
+
+首先理解官方api：[Queries - Client (React) - Apollo GraphQL Docs](https://www.apollographql.com/docs/react/data/queries/#prerequisites)
+
+其实现在[笔记内容](https://github.com/FunnyLiu/apollo-client/blob/readsource/src/react/hooks/useQuery.ts#L8)。
+
+用法一般如下：
+
+``` js
+export const GET_LAUNCHES = gql`
+  query GetLaunchList($after: String) {
+    launches(after: $after) {
+      cursor
+      hasMore
+      launches {
+        ...LaunchTile
+      }
+    }
+  }
+  ${LAUNCH_TILE_DATA}
+`;
+
+const Launches: React.FC<LaunchesProps> = () => {
+  // 获取列表
+  const { data, loading, error, fetchMore } = useQuery<
+    GetLaunchListTypes.GetLaunchList,
+    GetLaunchListTypes.GetLaunchListVariables
+  >(GET_LAUNCHES);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  if (loading) return <Loading />;
+  if (error) return <p>ERROR</p>;
+  if (!data) return <p>Not found</p>;
+
+  return (
+    <Fragment>
+      <Header />
+      {data.launches &&
+        data.launches.launches &&
+        data.launches.launches.map((launch: any) => (
+          <LaunchTile key={launch.id} launch={launch} />
+        ))}
+      {data.launches &&
+        data.launches.hasMore &&
+        (isLoadingMore ? (
+          <Loading />
+        ) : (
+          <Button
+            onClick={async () => {
+              setIsLoadingMore(true);
+              // 再次请求
+              await fetchMore({
+                variables: {
+                  after: data.launches.cursor,
+                },
+              });
+              setIsLoadingMore(false);
+            }}
+          >
+            Load More
+          </Button>
+        ))}
+    </Fragment>
+  );
+};
+
+```
+
+
+### 最底层到底是怎么发送请求的
+
+见[此处](https://github.com/FunnyLiu/apollo-client/blob/readsource/src/link/http/createHttpLink.ts#L36)。
+
+最后是通过window上的fetch API来完成接口的发送，前面经历了一些列的DSL解析。
+
 
 
 
