@@ -161,6 +161,7 @@ export class LocalState<TCacheShape> {
 
   // Client queries contain everything in the incoming document (if a @client
   // directive is found).
+  // 如果@client这个指令被使用
   public clientQuery(document: DocumentNode) {
     if (hasDirectives(['client'], document)) {
       if (this.resolvers) {

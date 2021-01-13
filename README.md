@@ -235,6 +235,12 @@ ignored
 
 ![img](./outer.svg)
 
+
+
+- [graphql-tag源码分析](https://github.com/FunnyLiu/graphql-tag/tree/readsource) - gql函数基于此包实现
+
+
+
 ## 内部模块依赖
 
 ![img](./inner.svg)
@@ -297,6 +303,40 @@ const LogoutButton = () => {
   );
 }
 ```
+
+
+### @client走客户端
+
+客户端在用的时候通过@client指令来使得查询停留在客户端：
+
+``` js
+//@client告诉不要从服务端，而是从客户端拿数据
+//在这个项目里也就是cache的值
+const IS_LOGGED_IN = gql`
+  query IsUserLoggedIn {
+    isLoggedIn @client
+  }
+`;
+```
+
+
+具体的判断逻辑在[此处](https://github.com/FunnyLiu/apollo-client/blob/readsource/src/core/QueryManager.ts#L715)。
+
+
+### gql函数
+
+从graphql-tag[源码分析](https://github.com/FunnyLiu/graphql-tag/tree/readsource)，这个包，导出gql函数。
+
+最后其中是通过[graphql-js的parser来完成解析](https://github.com/FunnyLiu/graphql-js/blob/readsource/src/language/parser.js#L116)
+
+
+具体逻辑在[此处](https://github.com/FunnyLiu/apollo-client/blob/readsource/src/core/index.ts#L113)
+
+
+
+
+
+-----
 
 
 

@@ -110,4 +110,5 @@ export const {
   enableExperimentalFragmentVariables,
   disableExperimentalFragmentVariables
 } = gql;
+// 从graphql-tag导出gql函数
 export { gql };

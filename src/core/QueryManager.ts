@@ -712,7 +712,7 @@ export class QueryManager<TStore> {
 
         return result;
       });
-
+    //如果有@client指令，就走本地，不走远端
     if (this.transform(query).hasClientExports) {
       const observablePromise = this.localState.addExportedVariables(
         query,
